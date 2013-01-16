@@ -42,6 +42,14 @@ In addition to that, there are independent moderation options that you can apply
 
 Finally, if you just don't like the idea of people being able to upload files to your server, you can disable the images-in-comments part of the plugin entirely.
 
+That covers server security, but there's also the issue of client-side security.
+
+By using this plugin you're running Javascript from within the plugin. This Javascript is hosted on your server and is under your control - you can inspect it to satisfy yourself that it is trustworthy.
+
+As part of the embedding process however, the client will fetch and run Javascript from deviantART's webservers. Some of this fetched Javascript needs to run in the context of a site controlled by you, which could technically allow us to access cookies and other "same origin" data within that fetched Javascript.
+
+We have no intention of such access, but you shouldn't have to take our word for it. So if you're concerned, the `deviantart_muro_sandbox.html` file can be moved to a sandbox domain/static assets domain that has no access to your site cookies or private content. From the admin settings page for the plugin you can then configure the location of the sandbox page and the plugin will continue working normally. For further details on this please [consult the wiki](https://github.com/deviantART/embedded-deviantART-muro/wiki/How-It-Works).
+
 = Is this plugin compatible with other media library plugins? =
 
 Assuming the other plugins only extend the default media library behaviour rather than replace it entirely, it's highly likely that this plugin will have no issues with other media library plugins.
