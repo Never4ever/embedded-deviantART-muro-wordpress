@@ -192,12 +192,12 @@ class Deviantart_Muro {
             check_admin_referer('deviantart-muro-settings');
 
             // TODO: Validation. This stuff is safe to pass on regardless, but better UX with validation.
-            update_option('damuro_default_background',    $_POST['default_background']);
-            update_option('damuro_sandbox_url',           $_POST['sandbox_url']);
-            update_option('damuro_default_width',         $_POST['default_width']);
-            update_option('damuro_default_height',        $_POST['default_height']);
-            update_option('damuro_default_canvas_width',  $_POST['default_canvas_width']);
-            update_option('damuro_default_canvas_height', $_POST['default_canvas_height']);
+            update_option('damuro_default_background',    $_POST['damuro_default_background']);
+            update_option('damuro_sandbox_url',           $_POST['damuro_sandbox_url']);
+            update_option('damuro_default_width',         $_POST['damuro_default_width']);
+            update_option('damuro_default_height',        $_POST['damuro_default_height']);
+            update_option('damuro_default_canvas_width',  $_POST['damuro_default_canvas_width']);
+            update_option('damuro_default_canvas_height', $_POST['damuro_default_canvas_height']);
             ?><div id="message" class="updated fade"><p><strong><?php _e('Options saved.', "deviantart-muro") ?></strong></p></div><?php
         }
 
@@ -214,18 +214,18 @@ class Deviantart_Muro {
         <table class="form-table">
 
         <tr valign="top">
-        <th scope="row"><label for="default_background"><?php _e('Default Background', "deviantart-muro") ?></label></th>
-        <td><input id="default_background" name="default_background" type="text" size="45" value="<?php echo form_option('damuro_default_background'); ?>"></td>
+        <th scope="row"><label for="damuro_default_background"><?php _e('Default Background', "deviantart-muro") ?></label></th>
+        <td><input id="damuro_default_background" name="damuro_default_background" type="text" size="45" value="<?php echo form_option('damuro_default_background'); ?>"></td>
         <td>(<a href="<?php echo $settingswiki ?>#wiki-background"><?php _e('What is this?', "deviantart-muro") ?></a>)</td>
         </tr>
         <tr valign="top">
 
         <th scope="row"><?php _e('Image Dimensions', "deviantart-muro") ?></th>
         <td>
-          <label for="default_canvas_width">Width</label>
-          <input id="default_canvas_width" name="default_canvas_width" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_canvas_width'); ?>">
-          <label for="default_canvas_height">Height</label>
-          <input id="default_canvas_height" name="default_canvas_height" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_canvas_height'); ?>">
+          <label for="damuro_default_canvas_width">Width</label>
+          <input id="damuro_default_canvas_width" name="damuro_default_canvas_width" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_canvas_width'); ?>">
+          <label for="damuro_default_canvas_height">Height</label>
+          <input id="damuro_default_canvas_height" name="damuro_default_canvas_height" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_canvas_height'); ?>">
         </td>
         <td>(<a href="<?php echo $settingswiki ?>#wiki-width"><?php _e('What is this?', "deviantart-muro") ?></a>)</td>
         </tr>
@@ -238,10 +238,10 @@ class Deviantart_Muro {
 
         <th scope="row"><?php _e('Window Dimensions', "deviantart-muro") ?></th>
         <td>
-          <label for="default_width">Width</label>
-          <input id="default_width" name="default_width" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_width'); ?>">
-          <label for="default_height">Height</label>
-          <input id="default_height" name="default_height" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_height'); ?>">
+          <label for="damuro_default_width">Width</label>
+          <input id="damuro_default_width" name="damuro_default_width" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_width'); ?>">
+          <label for="damuro_default_height">Height</label>
+          <input id="damuro_default_height" name="damuro_default_height" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_height'); ?>">
         </td>
         <td></td>
         </tr>
@@ -253,8 +253,8 @@ class Deviantart_Muro {
         <table class="form-table">
 
         <tr valign="top">
-        <th scope="row"><label for="sandbox_url"><?php _e('Sandbox URL', "deviantart-muro") ?></label></th>
-        <td><input id="sandbox_url" name="damuro_sandbox_url" type="text" size="45" value="<?php echo form_option('damuro_sandbox_url'); ?>"></td>
+        <th scope="row"><label for="damuro_sandbox_url"><?php _e('Sandbox URL', "deviantart-muro") ?></label></th>
+        <td><input id="damuro_sandbox_url" name="damuro_sandbox_url" type="text" size="45" value="<?php echo form_option('damuro_sandbox_url'); ?>"></td>
         <td>(<a href="<?php echo $howitworkswiki ?>"><?php _e('What is this?', "deviantart-muro") ?></a>)</td>
         </tr>
 
