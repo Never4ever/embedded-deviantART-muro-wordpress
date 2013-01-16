@@ -17,7 +17,6 @@ var muroModalContainer = window.document.getElementsByClassName("muro-modal-cont
     addImageButton = window.document.getElementsByClassName("deviantart-muro-add-comment-drawing")[0];
 
 function openMuro() {
-    // TODO: remove hijack of submit button if exists
     loadingDiv.style.visibility = 'visible';
     savingDiv.style.visibility  = 'hidden';
     muroIframe.style.visibility = 'hidden';
@@ -58,7 +57,6 @@ function receiveMessage(message) {
         previewImg.src = image;
         previewDiv.style.display = '';
         closeMuro();
-        // TODO: place hijack of submit button.
         return;
     }
 }
