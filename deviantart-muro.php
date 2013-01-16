@@ -72,7 +72,8 @@ class Deviantart_Muro {
                 $url_options[$dimension] = urlencode($value);
             }
         }
-$url_options['vm'] = 1;
+        // Debug option for dA developers, points it at our local muro virtual machine.
+        //$url_options['vm'] = 1;
 
         $url = get_option("damuro_sandbox_url");
         if (empty($url)) {
@@ -201,7 +202,8 @@ $url_options['vm'] = 1;
         }
 
         $wiki = 'https://github.com/deviantART/embedded-deviantART-muro/wiki/';
-        $settingswiki = $wiki . 'Embed-Options-Reference';
+        $settingswiki   = $wiki . 'Embed-Options-Reference';
+        $howitworkswiki = $wiki . 'How-It-Works';
 
         ?>
         <form action="options-general.php?page=deviantart-muro-settings" method="post">
@@ -245,6 +247,19 @@ $url_options['vm'] = 1;
         </tr>
 
         </table>
+
+        <h3><?php _e('Security Settings', "deviantart-muro") ?></h3>
+        <p><?php _e('The settings below effect the secutiry configuration of the deviantART muro iframe.', "deviantart-muro"); ?></p>
+        <table class="form-table">
+
+        <tr valign="top">
+        <th scope="row"><label for="sandbox_url"><?php _e('Sandbox URL', "deviantart-muro") ?></label></th>
+        <td><input id="sandbox_url" name="damuro_sandbox_url" type="text" size="45" value="<?php echo form_option('damuro_sandbox_url'); ?>"></td>
+        <td>(<a href="<?php echo $howitworkswiki ?>"><?php _e('What is this?', "deviantart-muro") ?></a>)</td>
+        </tr>
+
+        </table>
+
 
         <?php submit_button(); ?>
         </form>
