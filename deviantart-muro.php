@@ -249,7 +249,7 @@ class Deviantart_Muro {
         </table>
 
         <h3><?php _e('Security Settings', "deviantart-muro") ?></h3>
-        <p><?php _e('The settings below effect the secutiry configuration of the deviantART muro iframe.', "deviantart-muro"); ?></p>
+        <p><?php _e('The settings below effect the security configuration of the deviantART muro iframe.', "deviantart-muro"); ?></p>
         <table class="form-table">
 
         <tr valign="top">
