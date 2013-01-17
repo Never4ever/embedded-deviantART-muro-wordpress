@@ -18,6 +18,9 @@ class Deviantart_Muro {
     static $version = "1.0.0"; // If anyone needs it.
     static $deviantart_muro_url = 'http://sta.sh/muro';
 
+    private static $_comment_drawings_available = null;
+    private static $_comment_drawings_unavailability_reasons = array();
+
     public static function register_hooks() {
         load_plugin_textdomain('deviantart-muro', false, basename(dirname(__FILE__)) . '/languages');
 
@@ -30,8 +33,9 @@ class Deviantart_Muro {
 
         add_filter('media_upload_tabs', array(__CLASS__, 'media_upload_tabs'));
 
-        // TODO: check if we can run and if enabled in settings
-        self::register_comment_hooks();
+        if (self::are_comment_drawings_enabled()) {
+            self::register_comment_hooks();
+        }
     }
 
     public static function register_admin_hooks() {
@@ -54,6 +58,22 @@ class Deviantart_Muro {
 
         add_filter('get_comment_text',  array(__CLASS__, 'get_comment_text'),  10, 2);
         add_filter('comment_id_fields', array(__CLASS__, 'comment_id_fields'));
+    }
+
+    public static function are_comment_drawings_enabled() {
+        return get_option("damuro_comments_enabled") && self::are_comment_drawings_available();
+    }
+
+    public static function are_comment_drawings_available() {
+        if (!is_null(self::$_comment_drawings_available)) {
+            return self::$_comment_drawings_available;
+        }
+
+        if (!self::can_validate_image()) {
+            self::$_comment_drawings_unavailability_reasons[] = "Your PHP install is missing the required GD, ImageMagick or Cairo extensions to safely validate image uploads.";
+        }
+
+        return self::$_comment_drawings_available = empty(self::$_comment_drawings_unavailability_reasons);
     }
 
     private static function damuro_iframe($options, $context = 'shortcode') {
@@ -198,6 +218,7 @@ class Deviantart_Muro {
             update_option('damuro_default_height',        $_POST['damuro_default_height']);
             update_option('damuro_default_canvas_width',  $_POST['damuro_default_canvas_width']);
             update_option('damuro_default_canvas_height', $_POST['damuro_default_canvas_height']);
+            update_option('damuro_comments_enabled',      $_POST['damuro_comments_enabled']);
             ?><div id="message" class="updated fade"><p><strong><?php _e('Options saved.', "deviantart-muro") ?></strong></p></div><?php
         }
 
@@ -243,6 +264,25 @@ class Deviantart_Muro {
           <label for="damuro_default_height">Height</label>
           <input id="damuro_default_height" name="damuro_default_height" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_height'); ?>">
         </td>
+        <td></td>
+        </tr>
+
+        </table>
+
+        <h3><?php _e('Comments Settings', "deviantart-muro") ?></h3>
+        <p><?php _e('The settings below effect the behaviour of deviantART muro in comments.', "deviantart-muro"); ?></p><?php
+        if (!self::are_comment_drawings_available()) {
+            ?><div class="error"><p><?php _e('Warning: deviantART muro comment drawings are not available because:', "deviantart-muro"); ?></p><ul style="list-style-type: disc; padding: 0 20px;"><?php
+            foreach (self::$_comment_drawings_unavailability_reasons as $reason) {
+                ?><li><?php _e($reason, "deviantart-muro"); ?></li><?php
+            }
+            ?></ul></div><?php
+        }
+        ?><table class="form-table">
+
+        <tr valign="top">
+        <th scope="row"><label for="damuro_comments_enabled"><?php _e('Allow deviantART muro comments?', "deviantart-muro") ?></label></th>
+        <td><input id="damuro_comments_enabled" name="damuro_comments_enabled" type="checkbox" value="1"<?php echo get_option('damuro_comments_enabled') ? ' checked="1"' : '' ?>></td>
         <td></td>
         </tr>
 
@@ -333,7 +373,7 @@ class Deviantart_Muro {
             if (empty($_POST['comment_deviantart_muro_image'])) {
                 return;
             }
-            // TODO: fallback to grabbing raw base64 data from post field.
+            // Fallback to grabbing raw base64 data from post field.
             $contents = base64_decode(str_replace(' ', '+', $_POST['comment_deviantart_muro_image']));
             $tmp_filename = tempnam(sys_get_temp_dir(), "damuro");
             if (file_put_contents($tmp_filename, $contents) === false) {
