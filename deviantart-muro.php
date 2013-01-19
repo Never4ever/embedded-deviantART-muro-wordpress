@@ -21,6 +21,9 @@ class Deviantart_Muro {
     private static $_comment_drawings_available = null;
     private static $_comment_drawings_unavailability_reasons = array();
 
+    // Ugh, hack time.
+    private static $_inline_css_displayed = false;
+
     public static function register_hooks() {
         load_plugin_textdomain('deviantart-muro', false, basename(dirname(__FILE__)) . '/languages');
 
@@ -93,7 +96,7 @@ class Deviantart_Muro {
             }
         }
         // Debug option for dA developers, points it at our local muro virtual machine.
-        //$url_options['vm'] = 1;
+        $url_options['vm'] = 1;
 
         $url = get_option("damuro_sandbox_url");
         if (empty($url)) {
@@ -102,7 +105,7 @@ class Deviantart_Muro {
         $url = add_query_arg($url_options, $url);
 
         $ret = '<iframe class="muro" ' .
-            ($context === 'comment-muro' ? 'data-' : '') . 'src="' . esc_attr($url) . '"';
+            ($context === 'comment' ? 'data-' : '') . 'src="' . esc_attr($url) . '"';
 
         if (!empty($options['id'])) {
             $ret .= ' id="' . esc_attr($options['id']) . '"';
@@ -111,7 +114,10 @@ class Deviantart_Muro {
         foreach (array('width', 'height') as $dimension) {
             $value = empty($options[$dimension]) ? null : $options[$dimension];
             if (empty($value)) {
-                $value = get_option("damuro_default_{$dimension}", ($dimension == 'width') ? 1024 : 600);
+                $value = get_option("damuro_default_{$dimension}");
+                if (empty($value)) {
+                    $value = ($dimension == 'width') ? 800 : 600;
+                }
             }
             // Set it to 'auto' or something if you want the width
             // to not be set, ie: if you're setting it via CSS.
@@ -141,7 +147,8 @@ class Deviantart_Muro {
             'height'        => '',
             ), $atts);
 
-        return self::damuro_iframe($atts, 'shortcode');
+        return self::get_muro_container($atts, 'shortcode');
+//        return self::damuro_iframe($atts, 'shortcode');
     }
 
     public static function print_media_templates() {
@@ -161,32 +168,76 @@ class Deviantart_Muro {
         return $tabs;
     }
 
+    public static function get_inline_splash_stylesheet() {
+        if (self::$_inline_css_displayed) {
+            return '';
+        }
+        self::$_inline_css_displayed = true;
+        // Inline stylesheet is a pain, but we get loading flicker otherwise.
+        return <<<'EOT'
+            <style type="text/css">
+            iframe { border: 0 none; width: 100%; height: 100%; }
+            body { margin: 0; }
+            .muro-modal {
+                position: fixed;
+                top:      30px;
+                right:    30px;
+                bottom:   30px;
+                left:     30px;
+                z-index:  160000;
+                background-color: #fff;
+            }
+            .muro-modal-backdrop {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 159900;
+                opacity: 0.7;
+                background-color: #000;
+                min-height: 360px;
+            }
+            .muro-container, .muro, .muro-loading-inner { width: 100%; height: 100%; border: 0; }
+            .muro-container { position: absolute; overflow: auto; }
+            .muro-splash { display: table; position: absolute; width: 100%; height: 100%; }
+            .muro-splash-inner { display: table-cell; vertical-align: middle; text-align: center; }
+            .muro { position: absolute; }
+            .muro, .muro-saving { visibility: hidden; }
+            </style>
+EOT;
+    }
+
+    public static function get_muro_container($options, $context) {
+        $ret = self::get_inline_splash_stylesheet();
+        if ($options['modal']) {
+            // TODO: add close button on modal during loading/saving
+            $ret .= '<div class="muro-modal-container" style="display: none;"><div class="muro-modal">';
+        }
+        $ret .= '<div class="muro-container muro-' . esc_attr($context) . '">' .
+            '<div class="muro-loading muro-splash"><div class="muro-splash-inner">' .
+            __("Loading deviantART muro...", "deviantart-muro") .
+            '</div></div>' .
+            '<div class="muro-saving muro-splash"><div class="muro-splash-inner">' .
+            __("Saving from deviantART muro...", "deviantart-muro") .
+            '</div></div>' .
+            self::damuro_iframe($options, $context) .
+            '</div>';
+        if ($options['modal']) {
+            $ret .= '</div><div class="muro-modal-backdrop"></div></div>';
+        }
+        return $ret;
+    }
+
     public static function media_upload_damuro() {
         wp_enqueue_style('colors');
         wp_enqueue_media();
         wp_enqueue_script('damuro_media_uploader');
-        // Inline stylesheet is a pain, but we get loading flicker otherwise.
-        ?>
-        <style type="text/css">
-        iframe { border: 0 none; width: 100%; height: 100%; }
-        body { margin: 0; }
-        .muro-container, .muro, .muro-loading-inner { width: 100%; height: 100%; border: 0; }
-        .muro-container { overflow: auto; }
-        .muro-splash { display: table; position: absolute; width: 100%; height: 100%; }
-        .muro-splash-inner { display: table-cell; vertical-align: middle; text-align: center; }
-        .muro { position: absolute; }
-        .muro, .muro-saving { visibility: hidden; }
-        </style>
-        <div class="muro-container">
-        <div class="muro-loading muro-splash"><div class="muro-splash-inner"><?php _e("Loading deviantART muro...", "deviantart-muro"); ?></div></div>
-        <div class="muro-saving muro-splash"><div class="muro-splash-inner"><?php _e("Saving from deviantART muro...", "deviantart-muro"); ?></div></div>
-        <?php echo self::damuro_iframe(array(
+        echo self::get_muro_container(array(
             'id'     => 'media-tab-muro',
             'width'  => 'auto',
             'height' => 'auto',
-            ), 'media-tab') ?>
-        </div>
-        <?php
+            ), 'media-tab');
         do_action('admin_print_footer_scripts');
     }
 
@@ -440,55 +491,15 @@ class Deviantart_Muro {
 
     public static function comment_form_after_fields() {
         wp_enqueue_script('damuro_comments');
-        // Inline stylesheet is a pain, but we get loading flicker otherwise.
-        // TODO: add close button on modal during loading/saving
         ?>
         <div class="deviantart-muro-comment-image-preview" style="display: none;"><img /></div>
-        <style type="text/css">
-        iframe { border: 0 none; width: 100%; height: 100%; }
-        body { margin: 0; }
-        .muro-modal {
-            position: fixed;
-            top:      30px;
-            right:    30px;
-            bottom:   30px;
-            left:     30px;
-            z-index:  160000;
-            background-color: #fff;
-        }
-        .muro-modal-backdrop {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 159900;
-            opacity: 0.7;
-            background-color: #000;
-            min-height: 360px;
-        }
-        .muro-container, .muro, .muro-loading-inner { width: 100%; height: 100%; border: 0; }
-        .muro-container { position: absolute; overflow: auto; }
-        .muro-splash { display: table; position: absolute; width: 100%; height: 100%; }
-        .muro-splash-inner { display: table-cell; vertical-align: middle; text-align: center; }
-        .muro { position: absolute; }
-        .muro, .muro-saving { visibility: hidden; }
-        </style>
-        <div class="muro-modal-container" style="display: none;">
-        <div class="muro-modal">
-        <div class="muro-container">
-        <div class="muro-loading muro-splash"><div class="muro-splash-inner"><?php _e("Loading deviantART muro...", "deviantart-muro"); ?></div></div>
-        <div class="muro-saving muro-splash"><div class="muro-splash-inner"><?php _e("Saving from deviantART muro...", "deviantart-muro"); ?></div></div>
-        <?php echo self::damuro_iframe(array(
+        <?php
+        echo self::get_muro_container(array(
             'id'     => 'comment-muro',
             'width'  => 'auto',
             'height' => 'auto',
-            ), 'comment-muro') ?>
-        </div>
-        </div>
-        <div class="muro-modal-backdrop"></div>
-        </div>
-        <?php
+            'modal'  => true,
+            ), 'comment');
     }
 
     /* This is a somewhat semantically-dodgy hijack of the hidden comment-form fields filter
