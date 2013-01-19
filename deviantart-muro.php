@@ -111,6 +111,20 @@ class Deviantart_Muro {
             $ret .= ' id="' . esc_attr($options['id']) . '"';
         }
 
+        $dimensions = self::get_dimensions_from_options($options, $context);
+        foreach ($dimensions as $dimension => $value) {
+            $ret .= " {$dimension}=\"{$value}\"";
+        }
+
+        $ret .= "></iframe>";
+
+        // TODO: debug only
+        //return esc_html($ret);
+        return $ret;
+    }
+
+    public static function get_dimensions_from_options($options, $context) {
+        $dimensions = array();
         foreach (array('width', 'height') as $dimension) {
             $value = empty($options[$dimension]) ? null : $options[$dimension];
             if (empty($value)) {
@@ -123,15 +137,10 @@ class Deviantart_Muro {
             // to not be set, ie: if you're setting it via CSS.
             $value = (intval($value) > 0) ? intval($value) : null;
             if (!is_null($value)) {
-                $ret .= " {$dimension}=\"{$value}\"";
+                $dimensions[$dimension] = $value;
             }
         }
-
-        $ret .= "></iframe>";
-
-        // TODO: debug only
-        //return esc_html($ret);
-        return $ret;
+        return $dimensions;
     }
 
     // [damuro]
@@ -209,12 +218,24 @@ EOT;
     }
 
     public static function get_muro_container($options, $context) {
+        $dimensions = self::get_dimensions_from_options($options, $context);
+        $style = '';
+        if (!empty($dimensions)) {
+            $style .= ' style="';
+            foreach ($dimensions as $dimension => $value) {
+                $style .= "{$dimension}: {$value}px;";
+            }
+            $style .= '"';
+        }
+
         $ret = self::get_inline_splash_stylesheet();
+        $ret .= '<div class="muro-' . esc_attr($context) . '"' . $style . '>';
+
         if ($options['modal']) {
             // TODO: add close button on modal during loading/saving
             $ret .= '<div class="muro-modal-container" style="display: none;"><div class="muro-modal">';
         }
-        $ret .= '<div class="muro-container muro-' . esc_attr($context) . '">' .
+        $ret .= '<div class="muro-container"' . $style . '>' .
             '<div class="muro-loading muro-splash"><div class="muro-splash-inner">' .
             __("Loading deviantART muro...", "deviantart-muro") .
             '</div></div>' .
@@ -226,6 +247,7 @@ EOT;
         if ($options['modal']) {
             $ret .= '</div><div class="muro-modal-backdrop"></div></div>';
         }
+        $ret .= '</div>';
         return $ret;
     }
 
