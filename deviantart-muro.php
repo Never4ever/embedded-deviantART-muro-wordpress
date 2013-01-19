@@ -166,10 +166,11 @@ class Deviantart_Muro {
 
     public static function default_scripts(&$scripts) {
         $scripts->add('damuro_uploader',       plugin_dir_url(__FILE__) . "js/deviantart_muro_uploader.js", array(), false);
-        // TODO: if comments enabled
-        $scripts->add('damuro_comments',       plugin_dir_url(__FILE__) . "js/deviantart_muro_comments.js", array('damuro_uploader'), false);
         $scripts->add('damuro_media_uploader', plugin_dir_url(__FILE__) . "js/deviantart_muro_media_uploader.js", array('plupload', 'damuro_uploader'), false);
         $scripts->add('damuro_media_library',  plugin_dir_url(__FILE__) . "js/deviantart_muro_media_library.js", array(), false);
+        if (self::are_comment_drawings_enabled()) {
+            $scripts->add('damuro_comments',       plugin_dir_url(__FILE__) . "js/deviantart_muro_comments.js", array(), false);
+        }
     }
 
     public static function media_upload_tabs($tabs) {
