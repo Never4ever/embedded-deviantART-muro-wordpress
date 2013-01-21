@@ -137,7 +137,7 @@ function receiveMessage(message) {
 
 if (muroComment) {
     muroComment.button.addEventListener('click', openMuroModal, false);
+    window.addEventListener("message", receiveMessage, false);
 }
-window.addEventListener("message", receiveMessage, false);
 
 })(window);
