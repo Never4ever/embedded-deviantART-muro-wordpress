@@ -1,67 +1,129 @@
 (function (window, undefined) {
 "use strict";
 
-// TODO: build list of shortcode iframes
-// TODO: find comment form upwards from addImageButton
-// TODO: display "deviantART muro comments are not enabled" splashes if comment form not found
+var muroShortcodes = [],
+    muroModal      = null,
+    muroComment    = null;
 
-// Oh, the horrors involved in keeping dependency-free... #FirstWorldProblems
-var muroModalContainer = window.document.getElementsByClassName("muro-modal-container")[0],
-    muroContainer  = muroModalContainer.getElementsByClassName("muro-container")[0],
-    muroIframe     = muroContainer.getElementsByClassName("muro")[0],
-    loadingDiv     = muroContainer.getElementsByClassName("muro-loading")[0],
-    savingDiv      = muroContainer.getElementsByClassName("muro-saving")[0],
-    imageStore     = window.document.getElementsByClassName("deviantart-muro-add-comment-store")[0],
-    previewDiv     = window.document.getElementsByClassName("deviantart-muro-comment-image-preview")[0],
-    previewImg     = previewDiv.firstElementChild,
-    addImageButton = window.document.getElementsByClassName("deviantart-muro-add-comment-drawing")[0];
-
-function openMuro() {
-    loadingDiv.style.visibility = 'visible';
-    savingDiv.style.visibility  = 'hidden';
-    muroIframe.style.visibility = 'hidden';
-    muroModalContainer.style.display = '';
-    muroIframe.src = muroIframe.getAttribute('data-src');
+function openMuro(ourMuro) {
+    ourMuro.loading.style.visibility = 'visible';
+    ourMuro.saving.style.visibility  = 'hidden';
+    ourMuro.muro.style.visibility    = 'hidden';
+    ourMuro.muro.src = muroModal.muro.getAttribute('data-src');
 }
 
-function closeMuro() {
-    muroModalContainer.style.display = 'none';
-    muroIframe.src = '';
+function closeMuro(ourMuro) {
+    ourMuro.muro.src = '';
 }
+
+function openMuroModal() {
+    openMuro(muroModal);
+    muroModal.modal.style.display = '';
+}
+
+function closeMuroModal() {
+    muroModal.modal.style.display = 'none';
+    closeMuro(muroModal);
+}
+
+(function (window, undefined) {
+var i, sz, elements;
+
+// Build list of shortcode muro instances
+elements = window.document.getElementsByClassName("muro-shortcode");
+for (i = 0, sz = elements.length; i < sz; i++) {
+    muroShortcodes.push({
+        type:    'shortcode',
+        // Oh, the horrors involved in keeping dependency-free... #FirstWorldProblems
+        loading: elements[i].getElementsByClassName("muro-loading")[0],
+        saving:  elements[i].getElementsByClassName("muro-saving")[0],
+        muro:    elements[i].getElementsByClassName("muro")[0]
+        });
+}
+
+// Find comment form muro instance
+elements = window.document.getElementsByClassName("muro-comment");
+if (elements.length) {
+    muroModal = {
+        type:    'modal',
+        loading: elements[0].getElementsByClassName("muro-loading")[0],
+        saving:  elements[0].getElementsByClassName("muro-saving")[0],
+        muro:    elements[0].getElementsByClassName("muro")[0],
+        modal:   elements[0].getElementsByClassName("muro-modal-container")[0]
+        };
+    muroComment = {
+        imageStore:   window.document.getElementsByClassName("muro-comment-store")[0],
+        preview:      window.document.getElementsByClassName("muro-comment-preview")[0],
+        previewImage: window.document.getElementsByClassName("muro-comment-preview-image")[0],
+        button:       window.document.getElementsByClassName("muro-comment-add")[0]
+        };
+    // Start loading for shortcode iframes if comment form is found
+    for (i = 0, sz = muroShortcodes.length; i < sz; i++) {
+        openMuro(muroShortcodes[i]);
+    }
+} else {
+    // TODO: display "deviantART muro comments are not enabled" splashes if comment form not found
+}
+
+})(window);
 
 function receiveMessage(message) {
-    // TODO: check against list of shortcode iframes.
-    if (message.source !== muroIframe.contentWindow) {
-        return; // Not from our iframe, ignore it.
+    var i, sz, ourMuro;
+
+    ourMuro = false;
+    if (message.source === muroModal.muro.contentWindow) {
+        ourMuro = muroModal;
+    } else {
+        for (i = 0, sz = muroShortcodes.length; i < sz; i++) {
+            if (message.source === muroShortcodes[i].muro.contentWindow) {
+                ourMuro = muroShortcodes[i];
+                break;
+            }
+        }
+    }
+    if (!ourMuro) {
+        return; // Not from one of our iframes, ignore it.
     }
 
     switch (message.data.type) {
     case 'ready':
-        muroIframe.style.visibility = 'visible';
-        loadingDiv.style.visibility = 'hidden';
+        ourMuro.muro.style.visibility    = 'visible';
+        ourMuro.loading.style.visibility = 'hidden';
         return;
     case 'error':
         // TODO: handle errors
-        alert(message.data.error);
-        closeMuro();
+        window.alert(message.data.error);
+// TODO: only if modal muro
+        closeMuroModal();
         return;
     case 'cancel':
-        closeMuro();
+// TODO: only if modal muro
+        closeMuroModal();
         return;
     case 'done':
         var image = message.data.image;
 
-        savingDiv.style.visibility  = 'visible';
-        muroIframe.style.visibility = 'hidden';
-        imageStore.value = image.replace(/^data:image\/png;base64,/, '');
-        previewImg.src = image;
-        previewDiv.style.display = '';
-        closeMuro();
+        ourMuro.saving.style.visibility   = 'visible';
+        ourMuro.muro.style.visibility     = 'hidden';
+        muroComment.imageStore.value      = image.replace(/^data:image\/png;base64,/, '');
+        muroComment.previewImage.src      = image;
+        muroComment.preview.style.display = '';
+        if (ourMuro.type === 'modal') {
+            closeMuroModal();
+        } else {
+            closeMuro(ourMuro);
+        }
+        // Timeout hack because FF positioning is broken until reflow from preview reveal completes
+        window.setTimeout(function () {
+                window.document.getElementById('comment').focus();
+            }, 50);
         return;
     }
 }
 
-addImageButton.addEventListener('click', openMuro, false);
+if (muroComment) {
+    muroComment.button.addEventListener('click', openMuroModal, false);
+}
 window.addEventListener("message", receiveMessage, false);
 
 })(window);

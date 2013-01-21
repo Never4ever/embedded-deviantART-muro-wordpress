@@ -105,7 +105,8 @@ class Deviantart_Muro {
         $url = add_query_arg($url_options, $url);
 
         $ret = '<iframe class="muro" ' .
-            ($context === 'comment' ? 'data-' : '') . 'src="' . esc_attr($url) . '"';
+            (($context === 'comment' || $context === 'shortcode') ? 'data-' : '') .
+            'src="' . esc_attr($url) . '"';
 
         if (!empty($options['id'])) {
             $ret .= ' id="' . esc_attr($options['id']) . '"';
@@ -147,7 +148,11 @@ class Deviantart_Muro {
     // [damuro background='/my/amazing/image.jpg']
     // [damuro width='1024' height='768' background='/another/image.jpg']
     public static function damuro_shortcode($atts) {
-        // TODO: check that comments are enabled, display placeholder if not.
+        // Check that comments are enabled, display placeholder if not.
+        if (!self::are_comment_drawings_enabled()) {
+            return '[' . __("Error: Cannot use \"damuro\" shortcode while deviantART muro comments are disabled", "deviantart-muro") . ']';
+        }
+
         // TODO: check is: comments_open($comment_post_ID) - ID defaults to current post
         // TODO: see /wp-comments-post.php for other restrictions.
         $atts = shortcode_atts(array(
@@ -157,7 +162,6 @@ class Deviantart_Muro {
             ), $atts);
 
         return self::get_muro_container($atts, 'shortcode');
-//        return self::damuro_iframe($atts, 'shortcode');
     }
 
     public static function print_media_templates() {
@@ -506,7 +510,7 @@ EOT;
         }
         // TODO: sizing, thumbnail, click-to-view options, etc
         // TODO: alignment
-        $comment_content = '<div class="deviantart-muro-comment-image"><div class="wp-caption" style="width: ' . (10 + max((int)$image['width'], 150)) . 'px"><img src="' .
+        $comment_content = '<div class="muro-comment-image"><div class="wp-caption" style="width: ' . (10 + max((int)$image['width'], 150)) . 'px"><img src="' .
             esc_attr($image['url']) . '" alt="" title="Drawn with deviantART muro." />' .
             '<p class="wp-caption-text">Drawn with <a href="' . esc_attr(self::$deviantart_muro_url) . '">deviantART muro</a>.</p></div></div>' . $comment_content;
         return $comment_content;
@@ -515,7 +519,7 @@ EOT;
     public static function comment_form_after_fields() {
         wp_enqueue_script('damuro_comments');
         ?>
-        <div class="deviantart-muro-comment-image-preview" style="display: none;"><img /></div>
+        <div class="muro-comment-preview" style="display: none;"><img class="muro-comment-preview-image" /></div>
         <?php
         echo self::get_muro_container(array(
             'id'     => 'comment-muro',
@@ -533,8 +537,8 @@ EOT;
      */
     public static function comment_id_fields($result) {
         // To temporarily store the base64 image data before they submit.
-        $result .= "<input class='deviantart-muro-add-comment-store' type='hidden' name='comment_deviantart_muro_image' value='' />\n" .
-            "<input class='deviantart-muro-add-comment-drawing' type='button' name='draw' value='" . esc_attr__('Add drawing with deviantART muro', 'deviantart-muro') . "' />\n";
+        $result .= "<input class='muro-comment-store' type='hidden' name='comment_deviantart_muro_image' value='' />\n" .
+            "<input class='muro-comment-add' type='button' name='draw' value='" . esc_attr__('Add drawing with deviantART muro', 'deviantart-muro') . "' />\n";
         return $result;
     }
 }
