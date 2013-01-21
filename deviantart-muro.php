@@ -217,7 +217,7 @@ class Deviantart_Muro {
             .muro-splash { display: table; position: absolute; width: 100%; height: 100%; }
             .muro-splash-inner { display: table-cell; vertical-align: middle; text-align: center; }
             .muro { position: absolute; }
-            .muro, .muro-saving { visibility: hidden; }
+            .muro, .muro-saving, .muro-unavailable { visibility: hidden; }
             </style>
 EOT;
     }
@@ -246,6 +246,9 @@ EOT;
             '</div></div>' .
             '<div class="muro-saving muro-splash"><div class="muro-splash-inner">' .
             __("Saving from deviantART muro...", "deviantart-muro") .
+            '</div></div>' .
+            '<div class="muro-unavailable muro-splash"><div class="muro-splash-inner">' .
+            __("deviantART muro is unavailable while comment posting is disabled.", "deviantart-muro") .
             '</div></div>' .
             self::damuro_iframe($options, $context) .
             '</div>';

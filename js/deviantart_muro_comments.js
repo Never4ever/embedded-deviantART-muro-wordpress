@@ -6,13 +6,22 @@ var muroShortcodes = [],
     muroComment    = null;
 
 function openMuro(ourMuro) {
-    ourMuro.loading.style.visibility = 'visible';
-    ourMuro.saving.style.visibility  = 'hidden';
-    ourMuro.muro.style.visibility    = 'hidden';
+    ourMuro.loading.style.visibility     = 'visible';
+    ourMuro.saving.style.visibility      = 'hidden';
+    ourMuro.unavailable.style.visibility = 'hidden';
+    ourMuro.muro.style.visibility        = 'hidden';
     ourMuro.muro.src = muroModal.muro.getAttribute('data-src');
 }
 
 function closeMuro(ourMuro) {
+    ourMuro.muro.src = '';
+}
+
+function disableMuro(ourMuro) {
+    ourMuro.unavailable.style.visibility = 'visible';
+    ourMuro.loading.style.visibility     = 'hidden';
+    ourMuro.saving.style.visibility      = 'hidden';
+    ourMuro.muro.style.visibility        = 'hidden';
     ourMuro.muro.src = '';
 }
 
@@ -33,11 +42,12 @@ var i, sz, elements;
 elements = window.document.getElementsByClassName("muro-shortcode");
 for (i = 0, sz = elements.length; i < sz; i++) {
     muroShortcodes.push({
-        type:    'shortcode',
+        type:        'shortcode',
         // Oh, the horrors involved in keeping dependency-free... #FirstWorldProblems
-        loading: elements[i].getElementsByClassName("muro-loading")[0],
-        saving:  elements[i].getElementsByClassName("muro-saving")[0],
-        muro:    elements[i].getElementsByClassName("muro")[0]
+        loading:     elements[i].getElementsByClassName("muro-loading")[0],
+        saving:      elements[i].getElementsByClassName("muro-saving")[0],
+        unavailable: elements[i].getElementsByClassName("muro-unavailable")[0],
+        muro:        elements[i].getElementsByClassName("muro")[0]
         });
 }
 
@@ -45,11 +55,12 @@ for (i = 0, sz = elements.length; i < sz; i++) {
 elements = window.document.getElementsByClassName("muro-comment");
 if (elements.length) {
     muroModal = {
-        type:    'modal',
-        loading: elements[0].getElementsByClassName("muro-loading")[0],
-        saving:  elements[0].getElementsByClassName("muro-saving")[0],
-        muro:    elements[0].getElementsByClassName("muro")[0],
-        modal:   elements[0].getElementsByClassName("muro-modal-container")[0]
+        type:        'modal',
+        loading:     elements[0].getElementsByClassName("muro-loading")[0],
+        saving:      elements[0].getElementsByClassName("muro-saving")[0],
+        unavailable: elements[0].getElementsByClassName("muro-unavailable")[0],
+        muro:        elements[0].getElementsByClassName("muro")[0],
+        modal:       elements[0].getElementsByClassName("muro-modal-container")[0]
         };
     muroComment = {
         imageStore:   window.document.getElementsByClassName("muro-comment-store")[0],
@@ -62,7 +73,10 @@ if (elements.length) {
         openMuro(muroShortcodes[i]);
     }
 } else {
-    // TODO: display "deviantART muro comments are not enabled" splashes if comment form not found
+    // Display "deviantART muro comments are not enabled" splashes if comment form not found
+    for (i = 0, sz = muroShortcodes.length; i < sz; i++) {
+        disableMuro(muroShortcodes[i]);
+    }
 }
 
 })(window);
