@@ -95,6 +95,12 @@ class Deviantart_Muro {
                 $url_options[$dimension] = urlencode($value);
             }
         }
+        // Where on Sta.sh to save the drawing (defaults to "WordPress Drawings")
+        if ($value = get_option("damuro_stash_folder")) {
+            $url_options['stash_folder'] = urlencode($value);
+        } else {
+            $url_options['stash_folder'] = urlencode("WordPress Drawings");
+        }
         // Debug option for dA developers, points it at our local muro virtual machine.
         $url_options['vm'] = 1;
 
@@ -330,6 +336,11 @@ EOT;
           <input id="damuro_default_canvas_height" name="damuro_default_canvas_height" type="number" step="1" min="0" size="4" value="<?php echo form_option('damuro_default_canvas_height'); ?>">
         </td>
         <td>(<a href="<?php echo $settingswiki ?>#wiki-width"><?php _e('What is this?', "deviantart-muro") ?></a>)</td>
+        </tr>
+        <tr valign="top">
+        <th scope="row"><label for="damuro_stash_folder"><?php _e('Sta.sh Folder', "deviantart-muro") ?></label></th>
+        <td><input id="damuro_stash_folder" name="damuro_stash_folder" type="text" size="45" value="<?php echo form_option('damuro_stash_folder'); ?>"></td>
+        <td>(<a href="<?php echo $settingswiki ?>#wiki-stash_folder"><?php _e('What is this?', "deviantart-muro") ?></a>)</td>
         </tr>
 
         </table>
