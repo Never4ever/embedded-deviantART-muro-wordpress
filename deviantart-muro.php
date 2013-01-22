@@ -627,7 +627,7 @@ EOT;
     public static function comment_form_after_fields() {
         wp_enqueue_script('damuro_comments');
         ?>
-        <div class="muro-comment-preview" style="display: none;"><img class="muro-comment-preview-image" /></div>
+        <div class="muro-comment-preview" style="display: none;"><img class="muro-comment-preview-image" height="200" /></div>
         <?php
         echo self::get_muro_container(array(
             'id'     => 'comment-muro',
