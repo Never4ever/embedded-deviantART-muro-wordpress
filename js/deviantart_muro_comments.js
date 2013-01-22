@@ -10,7 +10,7 @@ function openMuro(ourMuro) {
     ourMuro.saving.style.visibility      = 'hidden';
     ourMuro.unavailable.style.visibility = 'hidden';
     ourMuro.muro.style.visibility        = 'hidden';
-    ourMuro.muro.src = muroModal.muro.getAttribute('data-src');
+    ourMuro.muro.src = ourMuro.muro.getAttribute('data-src');
 }
 
 function closeMuro(ourMuro) {
