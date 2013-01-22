@@ -21,12 +21,14 @@ Adds support for deviantART muro, the HTML5 drawing application, for image drawi
 1. Select `deviantart-muro.zip` from your computer.
 1. Upload.
 1. Activate the "deviantART muro" plugin on the WordPress Plugin Dashboard.
+1. If you want to enable deviantART muro comments, go to the settings panel for the "deviantART muro" plugin and check the "Allow deviantART muro comments?" checkbox then press "Save Changes".
 
 = Using FTP =
 
 1. Unzip the contents of deviantart-muro.zip.
 1. Upload the `deviantart-muro` directory and its contents to the `/wp-content/plugins/` directory.
 1. Activate the "deviantART muro" plugin through the 'Plugins' menu in WordPress.
+1. If you want to enable deviantART muro comments, go to the settings panel for the "deviantART muro" plugin and check the "Allow deviantART muro comments?" checkbox then press "Save Changes".
 
 == Frequently Asked Questions ==
 
@@ -34,9 +36,9 @@ Adds support for deviantART muro, the HTML5 drawing application, for image drawi
 
 Security is a complicated question, the deviantART muro plugin uses WordPress' standard upload mechanisms for adding items to your Media Library, so that part is as secure as core WordPress.
 
-For comments upload there's an inherent risk caused by the fact that you're accepting a file upload from a potentially untrusted and unknown user.
+For comments upload there's an inherent risk caused by the fact that you're accepting a file upload from a potentially untrusted and unknown user. For this reason the deviantART muro comments are turned off for the default install, you must enable them from the settings panel.
 
-The deviantART muro plugin attempts to minimise that risk by checking that the file type uploaded is a legitimate PNG image and that it is saved under a .png file extension.
+The deviantART muro plugin attempts to minimise the risk by checking that the file type uploaded is a legitimate PNG image and that it is saved under a .png file extension (to avoid image polyglot attacks).
 
 In addition to that, there are independent moderation options that you can apply to comments containing images; allowing you to set up stricter moderation rules for comments with images than those without.
 
