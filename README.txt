@@ -1,6 +1,4 @@
 === deviantART muro ===
-Contributors: markjaquith, mdawaffe (this should be a list of wordpress.org userid's)
-Donate link: http://example.com/
 Tags: images, media, comments
 Requires at least: 3.0.0
 Tested up to: 3.5

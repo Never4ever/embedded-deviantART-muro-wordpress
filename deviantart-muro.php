@@ -105,7 +105,7 @@ class Deviantart_Muro {
             $url_options['stash_folder'] = urlencode("WordPress Drawings");
         }
         // Debug option for dA developers, points it at our local muro virtual machine.
-        $url_options['vm'] = 1;
+        //$url_options['vm'] = 1;
 
         $url = get_option("damuro_sandbox_url");
         if (empty($url)) {
