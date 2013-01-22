@@ -64,11 +64,16 @@ Plugins that replace the entire comment system are quite likely to break the com
 
 == Screenshots ==
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the /assets directory or the directory that contains the stable readme.txt (tags or trunk). Screenshots in the /assets
-directory take precedence. For example, `/assets/screenshot-1.png` would win over `/tags/4.3/screenshot-1.png`
-(or jpg, jpeg, gif).
-2. This is the second screen shot
+1. The "Add Media" panel contains an embedded deviantART muro that allows you to draw directly into WordPress.
+2. Images saved from deviantART muro are added to your WordPress library automatically and can then be used in all the usual ways that any media asset can be.
+3. From within a post you can use a new `[damuro]` shortcode to embed an instance of deviantART muro within your article, you can set an image you want people to start with if you choose.
+4. How the article embed appears.
+5. The saved image gets put into the comment area, so the user can post it as a comment.
+6. Once posted, the comment contains the drawn image.
+7. You can also use the "Add drawing with deviantART muro" button on the comment form.
+8. This pops up an instance of deviantART muro in a modal.
+9. Once again the image is placed into a comment when you're done drawing.
+10. Comment images can be set to trigger moderation and show in the moderation panel.
 
 == Changelog ==
 
