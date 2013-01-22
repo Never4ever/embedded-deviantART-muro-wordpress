@@ -128,8 +128,6 @@ class Deviantart_Muro {
 
         $ret .= "></iframe>";
 
-        // TODO: debug only
-        //return esc_html($ret);
         return $ret;
     }
 
@@ -162,8 +160,6 @@ class Deviantart_Muro {
             return '[' . __("Error: Cannot use \"damuro\" shortcode while deviantART muro comments are disabled", "deviantart-muro") . ']';
         }
 
-        // TODO: check is: comments_open($comment_post_ID) - ID defaults to current post
-        // TODO: see /wp-comments-post.php for other restrictions.
         $atts = shortcode_atts(array(
             'background'    => '',
             'width'         => '',
@@ -479,14 +475,16 @@ EOT;
 
         if (empty($_FILES[$file_id])) {
             if (empty($_POST['comment_deviantart_muro_image'])) {
-                return $commentdata;
+                return $commentdata; // No comment image to save.
             }
             // Fallback to grabbing raw base64 data from post field.
             $contents = base64_decode(str_replace(' ', '+', $_POST['comment_deviantart_muro_image']));
             $tmp_filename = tempnam(sys_get_temp_dir(), "damuro");
             if (file_put_contents($tmp_filename, $contents) === false) {
-                // TODO: die with error
-                return $commentdata;
+                if (defined('DOING_AJAX')) {
+                    die(__("Error saving uploaded image file.", "deviantart-muro"));
+                }
+                wp_die(__("Error saving uploaded image file.", "deviantart-muro"));
             }
         } else {
             $tmp_filename = $_FILES[$file_id]['tmp_name'];
@@ -500,8 +498,10 @@ EOT;
         }
 
         if (!$validated) {
-            // TODO: die with error
-            return $commentdata;
+            if (defined('DOING_AJAX')) {
+                die(__("Uploaded image file was not a valid PNG.", "deviantart-muro"));
+            }
+            wp_die(__("Uploaded image file was not a valid PNG.", "deviantart-muro"));
         }
 
         if (!$contents) {
@@ -510,8 +510,10 @@ EOT;
 
         $upload = wp_upload_bits($filename, null, $contents);
         if ($upload['error'] !== false) {
-            // TODO: die with error
-            return;
+            if (defined('DOING_AJAX')) {
+                die(__("Error saving uploaded image file.", "deviantart-muro"));
+            }
+            wp_die(__("Error saving uploaded image file.", "deviantart-muro"));
         }
 
         $image = array(
@@ -541,7 +543,6 @@ EOT;
         }
     }
 
-    // TODO: add moderation bits to pre_comment_approved filter
     public static function pre_comment_approved($approved, $commentdata) {
         global $wpdb;
 
@@ -605,8 +606,10 @@ EOT;
     }
 
     public static function get_comment_text($comment_content, $comment) {
+        if (!self::are_comment_drawings_enabled()) {
+            return $comment_content;
+        }
         $comment_id = $comment->comment_ID;
-        // TODO: check if image display is on.
         if (!($meta = self::get_muro_comment_meta($comment_id))) {
             return $comment_content;
         }
