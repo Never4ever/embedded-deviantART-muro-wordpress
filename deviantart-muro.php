@@ -23,6 +23,7 @@ class Deviantart_Muro {
 
     // Ugh, hack time.
     private static $_inline_css_displayed = false;
+    private static $_comment_meta = null;
 
     public static function register_hooks() {
         load_plugin_textdomain('deviantart-muro', false, basename(dirname(__FILE__)) . '/languages');
@@ -53,8 +54,10 @@ class Deviantart_Muro {
     }
 
     public static function register_comment_hooks() {
-        add_action('wp_insert_comment', array(__CLASS__, 'insert_comment'), 10, 2);
-        add_action('delete_comment',    array(__CLASS__, 'delete_comment'));
+        add_action('wp_insert_comment',    array(__CLASS__, 'insert_comment'));
+        add_action('delete_comment',       array(__CLASS__, 'delete_comment'));
+        add_filter('preprocess_comment',   array(__CLASS__, 'preprocess_comment'));
+        add_filter('pre_comment_approved', array(__CLASS__, 'pre_comment_approved'), 10, 2);
 
         add_action('comment_form_after_fields',    array(__CLASS__, 'comment_form_after_fields'));
         add_action('comment_form_logged_in_after', array(__CLASS__, 'comment_form_after_fields'), 20);
@@ -450,27 +453,33 @@ EOT;
         return false;
     }
 
-    // TODO: save and validate before inserting comment, rename after inserting comment
-    public static function insert_comment($comment_id, $comment) {
+    public static function preprocess_comment($commentdata) {
 
-        if (!self::can_validate_image()) {
-            return;
+        if (!self::are_comment_drawings_enabled()) {
+            return $commentdata;
         }
 
-        $post_id  = $comment->comment_post_ID;
+        // Ew, global state hack: only way to pass the contents through to the next stage. :(
+        self::$_comment_meta = array();
+        // Make sure we delete image files if comment doesn't complete for some reason.
+        register_shutdown_function(array(__CLASS__, 'cleanup_unposted_comment_images'));
+
+        $post_id  = $commentdata['comment_post_ID'];
         $file_id  = "deviantart_muro_image_{$post_id}";
-        $filename = "deviantart_muro_comment_drawing_{$comment_id}.png";
+        // This needs an unpredictable filename since the file save happens before moderation.
+        $rand     = base_convert(mt_rand(), 10, 36);
+        $filename = "deviantart_muro_comment_{$post_id}_{$rand}.png";
 
         if (empty($_FILES[$file_id])) {
             if (empty($_POST['comment_deviantart_muro_image'])) {
-                return;
+                return $commentdata;
             }
             // Fallback to grabbing raw base64 data from post field.
             $contents = base64_decode(str_replace(' ', '+', $_POST['comment_deviantart_muro_image']));
             $tmp_filename = tempnam(sys_get_temp_dir(), "damuro");
             if (file_put_contents($tmp_filename, $contents) === false) {
                 // TODO: die with error
-                return;
+                return $commentdata;
             }
         } else {
             $tmp_filename = $_FILES[$file_id]['tmp_name'];
@@ -485,7 +494,7 @@ EOT;
 
         if (!$validated) {
             // TODO: die with error
-            return;
+            return $commentdata;
         }
 
         if (!$contents) {
@@ -498,35 +507,107 @@ EOT;
             return;
         }
 
+        $image = array(
+            'original' => array(
+                'file'   => $upload['file'],
+                'url'    => $upload['url'],
+                'width'  => $validated['width'],
+                'height' => $validated['height'],
+                ),
+            );
+        self::$_comment_meta[] = &$image;
+
         // TODO: resizing, etc
         // TODO: make thumbnail
 
-        add_comment_meta($comment_id, 'deviantart_muro_image', array(
-            'file'   => $upload['file'],
-            'url'    => $upload['url'],
-            'width'  => $validated['width'],
-            'height' => $validated['height'],
-            ));
+        return $commentdata;
+    }
+
+    public static function cleanup_unposted_comment_images() {
+        if (empty(self::$_comment_meta)) {
+            return;
+        }
+        foreach (self::$_comment_meta as $image) {
+            foreach ($image as $imagedata) {
+                @unlink($imagedata['file']);
+            }
+        }
+    }
+
+    // TODO: add moderation bits to pre_comment_approved filter
+    public static function pre_comment_approved($approved, $commentdata) {
+        global $wpdb;
+
+        if (empty(self::$_comment_meta)) {
+            return $approved;
+        }
+
+        if ($approved !== 1) {
+            return $approved; // Something already refused approval.
+        }
+
+        // TODO: do we have muro comment moderation on?
+
+        if (!empty($commentdata['user_id'])) {
+            $user = get_userdata($commentdata['user_id']);
+            $post_author = $wpdb->get_var($wpdb->prepare("SELECT post_author FROM $wpdb->posts WHERE ID = %d LIMIT 1", $commentdata['comment_post_ID']));
+        }
+
+        if (isset($user) && ($commentdata['user_id'] == $post_author || $user->has_cap('moderate_comments'))) {
+            // The author and the admins get respect.
+            return $approved;
+        }
+
+        return $approved;
+    }
+
+    public static function insert_comment($comment_id) {
+
+        if (empty(self::$_comment_meta)) {
+            return;
+        }
+
+        add_comment_meta($comment_id, 'deviantart_muro_image', self::$_comment_meta);
+        self::$_comment_meta = null;
+    }
+
+    public static function get_muro_comment_meta($comment_id) {
+        $meta = get_comment_meta($comment_id, 'deviantart_muro_image', true);
+        if (empty($meta)) {
+            return $meta;
+        }
+        // Compat hack.
+        if (array_shift(array_keys($meta)) !== 0) {
+            $meta = array(array('original' => $meta));
+        }
+        return $meta;
     }
 
     public static function delete_comment($comment_id) {
-        if (!($image = get_comment_meta($comment_id, 'deviantart_muro_image', true))) {
+        if (!($meta = self::get_muro_comment_meta($comment_id))) {
             return;
         }
-        unlink($image['file']);
+        foreach ($meta as $image) {
+            foreach ($image as $imagedata) {
+                @unlink($imagedata['file']);
+            }
+        }
     }
 
     public static function get_comment_text($comment_content, $comment) {
         $comment_id = $comment->comment_ID;
         // TODO: check if image display is on.
-        if (!($image = get_comment_meta($comment_id, 'deviantart_muro_image', true))) {
+        if (!($meta = self::get_muro_comment_meta($comment_id))) {
             return $comment_content;
         }
-        // TODO: sizing, thumbnail, click-to-view options, etc
-        // TODO: alignment
-        $comment_content = '<div class="muro-comment-image"><div class="wp-caption" style="width: ' . (10 + max((int)$image['width'], 150)) . 'px"><img src="' .
-            esc_attr($image['url']) . '" alt="" title="Drawn with deviantART muro." />' .
-            '<p class="wp-caption-text">Drawn with <a href="' . esc_attr(self::$deviantart_muro_url) . '">deviantART muro</a>.</p></div></div>' . $comment_content;
+        foreach ($meta as $image) {
+            // TODO: sizing, thumbnail, click-to-view options, etc
+            $thumbtype = 'original';
+            // TODO: alignment
+            $comment_content = '<div class="muro-comment-image"><div class="wp-caption" style="width: ' . (10 + max((int)$image[$thumbtype]['width'], 150)) . 'px"><img src="' .
+                esc_attr($image[$thumbtype]['url']) . '" alt="" title="Drawn with deviantART muro." />' .
+                '<p class="wp-caption-text">Drawn with <a href="' . esc_attr(self::$deviantart_muro_url) . '">deviantART muro</a>.</p></div></div>' . $comment_content;
+        }
         return $comment_content;
     }
 
