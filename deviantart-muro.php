@@ -67,7 +67,7 @@ class Deviantart_Muro {
     }
 
     public static function are_comment_drawings_enabled() {
-        return get_option("damuro_comments_enabled") && self::are_comment_drawings_available();
+        return get_option("damuro_comments") && self::are_comment_drawings_available();
     }
 
     public static function are_comment_drawings_available() {
@@ -303,12 +303,14 @@ EOT;
 
             // TODO: Validation. This stuff is safe to pass on regardless, but better UX with validation.
             update_option('damuro_default_background',    $_POST['damuro_default_background']);
+            update_option('damuro_stash_folder',          $_POST['damuro_stash_folder']);
             update_option('damuro_sandbox_url',           $_POST['damuro_sandbox_url']);
             update_option('damuro_default_width',         $_POST['damuro_default_width']);
             update_option('damuro_default_height',        $_POST['damuro_default_height']);
             update_option('damuro_default_canvas_width',  $_POST['damuro_default_canvas_width']);
             update_option('damuro_default_canvas_height', $_POST['damuro_default_canvas_height']);
-            update_option('damuro_comments_enabled',      $_POST['damuro_comments_enabled']);
+            update_option('damuro_comments',              $_POST['damuro_comments']);
+            update_option('damuro_comment_moderation',    $_POST['damuro_comment_moderation']);
             ?><div id="message" class="updated fade"><p><strong><?php _e('Options saved.', "deviantart-muro") ?></strong></p></div><?php
         }
 
@@ -376,8 +378,13 @@ EOT;
         ?><table class="form-table">
 
         <tr valign="top">
-        <th scope="row"><label for="damuro_comments_enabled"><?php _e('Allow deviantART muro comments?', "deviantart-muro") ?></label></th>
-        <td><input id="damuro_comments_enabled" name="damuro_comments_enabled" type="checkbox" value="1"<?php echo get_option('damuro_comments_enabled') ? ' checked="1"' : '' ?>></td>
+        <th scope="row"><label for="damuro_comments"><?php _e('Allow deviantART muro comments?', "deviantart-muro") ?></label></th>
+        <td><input id="damuro_comments" name="damuro_comments" type="checkbox" value="1"<?php echo get_option('damuro_comments') ? ' checked="1"' : '' ?>></td>
+        <td></td>
+        </tr>
+        <tr valign="top">
+        <th scope="row"><label for="damuro_comment_moderation"><?php _e('Require moderation of deviantART muro comments?', "deviantart-muro") ?></label></th>
+        <td><input id="damuro_comment_moderation" name="damuro_comment_moderation" type="checkbox" value="1"<?php echo get_option('damuro_comment_moderation') ? ' checked="1"' : '' ?>></td>
         <td></td>
         </tr>
 
@@ -546,7 +553,10 @@ EOT;
             return $approved; // Something already refused approval.
         }
 
-        // TODO: do we have muro comment moderation on?
+        // Do we have muro comment moderation on?
+        if (!get_option("damuro_comment_moderation")) {
+            return $approved;
+        }
 
         if (!empty($commentdata['user_id'])) {
             $user = get_userdata($commentdata['user_id']);
