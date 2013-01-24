@@ -1,15 +1,21 @@
 === deviantART muro ===
+Contributors: illusori
 Tags: images, media, comments
 Requires at least: 3.0.0
 Tested up to: 3.5
-Stable tag: 1.0.0
-License: BSD
+Stable tag: trunk
+License: 3-Clause BSD
 License URI: http://opensource.org/licenses/BSD-3-Clause
 
-Adds support for deviantART muro, the HTML5 drawing application, for image drawing in your Media Library, articles and comments.
+Embed deviantART muro, the HTML5 drawing application, for image drawing in your Media Library, in articles, and for drawing in comments.
 
 == Description ==
 
+This plugin embeds the [deviantART muro](http://sta.sh/muro) HTML5 drawing application into your WordPres installation, allowing you to:
+
+* Draw in your browser to create new images in your Media Library.
+* Allow your users to draw in their browser to add images to their comments.
+* Embed deviantART muro with a preselected image within your articles, for example to run a competition or ask for feedback on an artwork you've drawn.
 
 == Installation ==
 
@@ -38,7 +44,7 @@ For comments upload there's an inherent risk caused by the fact that you're acce
 
 The deviantART muro plugin attempts to minimise the risk by checking that the file type uploaded is a legitimate PNG image and that it is saved under a .png file extension (to avoid image polyglot attacks).
 
-In addition to that, there are independent moderation options that you can apply to comments containing images; allowing you to set up stricter moderation rules for comments with images than those without.
+In addition to that, there is the ability to set image comments to be held for moderation even if the comment wouldn't usually require moderation.
 
 Finally, if you just don't like the idea of people being able to upload files to your server, you can disable the images-in-comments part of the plugin entirely.
 
@@ -80,3 +86,8 @@ Plugins that replace the entire comment system are quite likely to break the com
 = 1.0.0 =
 * Initial release.
 
+== Contributing ==
+
+This plugin is open source, contributions are welcome.
+
+Just fork https://github.com/deviantART/embedded-deviantART-muro-wordpress on [GitHub](http://github.com) and send us a pull request with your changes.
