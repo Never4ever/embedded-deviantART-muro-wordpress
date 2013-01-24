@@ -3,13 +3,22 @@
 
 var muroShortcodes = [],
     muroModal      = null,
-    muroComment    = null;
+    muroComment    = null,
+    muroStates     = ['loading', 'saving', 'unavailable', 'muro'];
+
+function setMuroState(ourMuro, state) {
+    var i, sz;
+
+    ourMuro[state].style.visibility = 'visible';
+    for (i = 0, sz = muroStates.length; i < sz; i++) {
+        if (muroStates[i] !== state) {
+            ourMuro[muroStates[i]].style.visibility = 'hidden';
+        }
+    }
+}
 
 function openMuro(ourMuro) {
-    ourMuro.loading.style.visibility     = 'visible';
-    ourMuro.saving.style.visibility      = 'hidden';
-    ourMuro.unavailable.style.visibility = 'hidden';
-    ourMuro.muro.style.visibility        = 'hidden';
+    setMuroState(ourMuro, 'loading');
     ourMuro.muro.src = ourMuro.muro.getAttribute('data-src');
 }
 
@@ -18,10 +27,7 @@ function closeMuro(ourMuro) {
 }
 
 function disableMuro(ourMuro) {
-    ourMuro.unavailable.style.visibility = 'visible';
-    ourMuro.loading.style.visibility     = 'hidden';
-    ourMuro.saving.style.visibility      = 'hidden';
-    ourMuro.muro.style.visibility        = 'hidden';
+    setMuroState('unavailable');
     ourMuro.muro.src = '';
 }
 
@@ -101,36 +107,39 @@ function receiveMessage(message) {
 
     switch (message.data.type) {
     case 'ready':
-        ourMuro.muro.style.visibility    = 'visible';
-        ourMuro.loading.style.visibility = 'hidden';
-        return;
-    case 'error':
-        // TODO: handle errors
-        window.alert(message.data.error);
-// TODO: only if modal muro
-        closeMuroModal();
+        setMuroState(ourMuro, 'muro');
         return;
     case 'cancel':
-// TODO: only if modal muro
-        closeMuroModal();
+        if (ourMuro.type === 'modal') {
+            closeMuroModal();
+        } else {
+            openMuro(ourMuro); // reset to default, this is kinda hacky
+        }
         return;
     case 'done':
         var image = message.data.image;
 
-        ourMuro.saving.style.visibility   = 'visible';
-        ourMuro.muro.style.visibility     = 'hidden';
+        setMuroState(ourMuro, 'saving');
         muroComment.imageStore.value      = image.replace(/^data:image\/png;base64,/, '');
         muroComment.previewImage.src      = image;
         muroComment.preview.style.display = '';
+        return;
+    case 'error':
+        // TODO: handle errors
+        window.alert(message.data.error);
         if (ourMuro.type === 'modal') {
             closeMuroModal();
         } else {
             closeMuro(ourMuro);
         }
-        // Timeout hack because FF positioning is broken until reflow from preview reveal completes
-        window.setTimeout(function () {
-                window.document.getElementById('comment').focus();
-            }, 50);
+        return;
+    case 'complete':
+        if (ourMuro.type === 'modal') {
+            closeMuroModal();
+        } else {
+            closeMuro(ourMuro);
+        }
+        window.document.getElementById('comment').focus();
         return;
     }
 }
