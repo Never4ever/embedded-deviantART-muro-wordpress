@@ -11,7 +11,7 @@ Embed deviantART muro, the HTML5 drawing application, for image drawing in your 
 
 == Description ==
 
-This plugin embeds the [deviantART muro](http://sta.sh/muro) HTML5 drawing application into your WordPres installation, allowing you to:
+This plugin embeds the [deviantART muro](http://sta.sh/muro) HTML5 drawing application into your WordPress installation, allowing you to:
 
 * Draw in your browser to create new images in your Media Library.
 * Allow your users to draw in their browser to add images to their comments.
